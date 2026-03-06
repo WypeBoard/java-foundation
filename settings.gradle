@@ -1,0 +1,5 @@
+rootProject.name = 'foundation'
+
+include 'date:core'
+include 'date:spring'
+include 'date:test'
