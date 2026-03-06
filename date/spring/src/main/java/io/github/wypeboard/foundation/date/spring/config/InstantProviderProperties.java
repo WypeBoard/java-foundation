@@ -8,7 +8,7 @@ import java.time.ZoneId;
 @ConfigurationProperties(prefix = "foundation.date")
 public class InstantProviderProperties {
 
-    private ZoneId zone = ZoneId.of("europe/copenhagen");
+    private ZoneId zone = ZoneId.of("Europe/Copenhagen");
     private Instant minDate = Instant.parse("1970-01-01T00:00:00Z");
     private Instant maxDate = Instant.parse("2099-12-31T23:59:59Z");
 

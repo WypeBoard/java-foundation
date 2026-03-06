@@ -2,6 +2,7 @@ dependencies {
     api project(":date:core")
 
 
-    compileOnly("org.springframework.boot:spring-boot:3.2.5")
-    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:3.2.5")
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure:3.5.11'
+    compileOnly 'org.springframework.boot:spring-boot:3.5.11'
+    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:3.5.11")
 }
