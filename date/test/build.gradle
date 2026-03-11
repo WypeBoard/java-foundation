@@ -1,5 +1,5 @@
 dependencies {
-    api(project(":date:core"))
-    api("org.junit.jupiter:junit-jupiter-api:5.10.2")
-    api("org.mockito:mockito-core:5.11.0")
+    api project(':core-date')
+    api 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    api 'org.mockito:mockito-core:5.11.0'
 }

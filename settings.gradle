@@ -1,5 +1,30 @@
 rootProject.name = 'foundation'
 
-include 'date:core'
-include 'date:spring'
-include 'date:test'
+def KNOWN_TYPES = ['core', 'spring', 'test'] as Set
+
+fileTree(rootDir).matching(
+        new PatternSet()
+        .include("/*/**/build.gradle")
+        .exclude("**/build/", "buildSrc")
+).forEach {
+
+    String buildPath = it.parentFile.path.replace(rootDir.path, '')
+    if (!buildPath) {
+        return
+    }
+
+    List<String> segments = buildPath.replace('\\', '/').split('/').findAll{ it }
+    String type = segments.find { it in KNOWN_TYPES }
+    if (!type) {
+        throw new GradleException(
+                "Module at '${buildPath}' contains no known type ${KNOWN_TYPES}. " +
+                        "Either fix the structure or add the new type to KNOWN_TYPES."
+        )
+    }
+    List<String> reordered = [type] + (segments - type)
+
+    String buildName = ":${reordered.join('-')}"
+
+    include(buildName)
+    project(buildName).projectDir = it.parentFile
+}

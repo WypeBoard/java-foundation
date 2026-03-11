@@ -9,7 +9,6 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/date" />
             <option value="$PROJECT_DIR$/date/core" />
             <option value="$PROJECT_DIR$/date/spring" />
             <option value="$PROJECT_DIR$/date/test" />
