@@ -4,20 +4,15 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
 
-public class Interval implements Serializable, Comparable<Interval> {
+public record Interval(Instant from, Instant to) implements Serializable, Comparable<Interval> {
 
-    private final Instant from;
-    private final Instant to;
-
-    public Interval(Instant from, Instant to) {
+    public Interval {
         Objects.requireNonNull(from, "from cannot be null — use Interval.open() for unbounded intervals");
         Objects.requireNonNull(to, "to cannot be null — use Interval.open() for unbounded intervals");
         if (to.isBefore(from)) {
             throw new IllegalArgumentException(
                     "to [%s] cannot be before from [%s]".formatted(to, from));
         }
-        this.from = from;
-        this.to = to;
     }
 
     public static Interval open(Instant from, Instant to) {
@@ -28,14 +23,6 @@ public class Interval implements Serializable, Comparable<Interval> {
             to = Instant.MAX;
         }
         return new Interval(from, to);
-    }
-
-    public Instant from() {
-        return from;
-    }
-
-    public Instant to() {
-        return to;
     }
 
     public boolean contains(Instant instant) {
@@ -65,14 +52,13 @@ public class Interval implements Serializable, Comparable<Interval> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Interval other)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Interval other)) {
+            return false;
+        }
         return from.equals(other.from) && to.equals(other.to);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(from, to);
     }
 
     @Override

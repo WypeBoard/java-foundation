@@ -1,7 +1,7 @@
 package io.github.wypeboard.foundation.date.test.utils.state;
 
 import io.github.wypeboard.foundation.date.core.provider.InstantProvider;
-import org.mockito.MockingDetails;
+import io.github.wypeboard.foundation.utils.predicates.StreamUtils;
 import org.mockito.Mockito;
 
 import java.io.Closeable;
@@ -15,8 +15,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static io.github.wypeboard.foundation.date.test.utils.state.PredicateUtils.*;
-import static io.github.wypeboard.foundation.date.test.utils.state.PredicateUtils.by;
+import static io.github.wypeboard.foundation.utils.predicates.PredicateUtils.by;
+import static io.github.wypeboard.foundation.utils.predicates.PredicateUtils.throwIfNot;
 
 public class TimeState {
 
@@ -37,25 +37,33 @@ public class TimeState {
     }
 
     public static void setInstantProvider(Set<InstantProvider> instantProviders) {
-        getInstance().ifPresent(timeCache -> timeCache.setInstantProviders(instantProviders));
+        getInstance().ifPresent(cache -> cache.setInstantProviders(instantProviders));
+    }
+
+    public static void setZone(ZoneId zoneId) {
+        getInstance().ifPresent(cache -> cache.setZoneId(zoneId));
+    }
+
+    public static void setInstantTime(Instant instant) {
+        getInstance().ifPresent(cache -> cache.setInstantReference(instant));
+    }
+
+    public static void setMinDate(Instant minDate) {
+        getInstance().ifPresent(cache -> cache.setMinDate(minDate));
+    }
+
+    public static void setMaxDate(Instant maxDate) {
+        getInstance().ifPresent(cache -> cache.setMaxDate(maxDate));
     }
 
     public static void reset() {
         getInstance().ifPresent(TimeCache::reset);
     }
 
-    public static void setZone(ZoneId zoneId) {
-        getInstance().ifPresent(timeCache -> timeCache.setZoneId(zoneId));
-    }
-
-    public static void setInstantTime(Instant instant) {
-        getInstance().ifPresent(timeCache -> timeCache.setInstantReference(instant));
-    }
-
     public static void close() {
-        getInstance().ifPresent(timeCache -> {
+        getInstance().ifPresent(cache -> {
             try {
-                timeCache.close();
+                cache.close();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -63,16 +71,21 @@ public class TimeState {
         TIME_CACHE.remove();
     }
 
-
     private static class TimeCache implements Closeable {
         private Set<InstantProvider> instantProviders;
-        private ZoneId zoneId = ZoneId.systemDefault();
+        private ZoneId zoneId = ZoneId.of("UTC");
+        private Instant instant = Instant.now();
+        private Instant minDate = Instant.MIN;
+        private Instant maxDate = Instant.MAX;
 
-        public void setInstantProviders(Set<InstantProvider> instantProviders) {
-            this.instantProviders = instantProviders.stream()
-                    .filter(throwIfNot(Objects::nonNull, "A supplied InstantProvider is null. Ensure correct order of annotation\\n@Extend mockito or Spring must be before @TimeAware"))
-                    .filter(by(TimeCache::isSpyOrMock, Mockito::mockingDetails))
-                    .map(TimeCache::mockNonChaningValues)
+        public void setInstantProviders(Set<InstantProvider> providers) {
+            this.instantProviders = providers.stream()
+                    .filter(throwIfNot(
+                            Objects::nonNull,
+                            "A supplied InstantProvider is null. Ensure correct extension ordering — " +
+                                    "@ExtendWith MockitoExtension or SpringExtension must be declared before @TimeAware"))
+                    .filter(by(details -> details.isMock() || details.isSpy(),
+                            Mockito::mockingDetails))
                     .collect(Collectors.toSet());
         }
 
@@ -80,32 +93,37 @@ public class TimeState {
             this.zoneId = zoneId;
         }
 
-        private static boolean isSpyOrMock(MockingDetails mockingDetails) {
-            return mockingDetails.isMock() || mockingDetails.isSpy();
+        public void setInstantReference(Instant instant) {
+            this.instant = instant;
+            stubProviders();
         }
 
-        private static InstantProvider mockNonChaningValues(InstantProvider instantProvider) {
-            Mockito.lenient().doReturn(Instant.MAX).when(instantProvider.maxDate());
-            Mockito.lenient().doReturn(Instant.MIN).when(instantProvider.minDate());
-            return instantProvider;
+        public void setMinDate(Instant minDate) {
+            this.minDate = minDate;
+        }
+
+        public void setMaxDate(Instant maxDate) {
+            this.maxDate = maxDate;
+        }
+
+        private void stubProviders() {
+            StreamUtils.ofNullable(instantProviders).forEach(provider -> {
+                Mockito.lenient().doReturn(instant).when(provider).now();
+                Mockito.lenient().doReturn(zoneId).when(provider).zoneId();
+                Mockito.lenient().doReturn(minDate).when(provider).minDate();
+                Mockito.lenient().doReturn(maxDate).when(provider).maxDate();
+                Mockito.lenient().doReturn(LocalDate.ofInstant(instant, zoneId)).when(provider).getDate();
+                Mockito.lenient().doReturn(LocalDateTime.ofInstant(instant, zoneId)).when(provider).getDateTime();
+            });
+        }
+
+        public void reset() {
+            // Reserved for MockStatic teardown if added later
         }
 
         @Override
         public void close() throws IOException {
-            // Present for potential MockStatic
-        }
-
-        public void reset() {
-            // Present for potential MockStatic
-        }
-
-        public void setInstantReference(Instant instant) {
-            StreamUtils.ofNullable(instantProviders)
-                    .forEach(dateProvider -> {
-                        Mockito.lenient().doReturn(instant).when(dateProvider.now());
-                        Mockito.lenient().doReturn(LocalDate.ofInstant(instant, zoneId)).when(dateProvider.getDate());
-                        Mockito.lenient().doReturn(LocalDateTime.ofInstant(instant, zoneId)).when(dateProvider.getDateTime());
-                    });
+            // Reserved for MockStatic teardown if added later
         }
     }
 }

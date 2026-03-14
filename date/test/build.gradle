@@ -1,5 +1,7 @@
 dependencies {
     api project(':core-date')
+    api project(':core-utils')
+
     api 'org.junit.jupiter:junit-jupiter-api:5.10.2'
     api 'org.mockito:mockito-core:5.11.0'
 }

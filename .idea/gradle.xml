@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/date/core" />
             <option value="$PROJECT_DIR$/date/spring" />
             <option value="$PROJECT_DIR$/date/test" />
+            <option value="$PROJECT_DIR$/utils/core" />
           </set>
         </option>
       </GradleProjectSettings>

@@ -18,25 +18,31 @@ import java.util.List;
 
 /**
  * JUnit 5 extension backing {@link TimeAware}.
- * <p>
- * Lifecycle:
- * 1. beforeEach  — resolves annotation (method > class), builds fixed Clock, injects into Clock fields
- * 2. afterEach   — clears injected fields back to null (clean state between tests)
+ *
+ * <p>Lifecycle per test:
+ * <ol>
+ *   <li>beforeEach — opens TimeState, resolves annotation (method > class),
+ *       builds a fixed Clock, stubs any {@link InstantProvider} mocks found
+ *       in the test instance hierarchy.</li>
+ *   <li>afterEach  — resets and closes TimeState.</li>
+ * </ol>
  */
-public class TimeAwareExtension implements BeforeEachCallback, AfterEachCallback, BeforeAllCallback, AfterAllCallback {
+public class TimeAwareExtension implements BeforeEachCallback, AfterEachCallback {
+
+    private static final List<DateTimeFormatter> FORMATTERS = List.of(
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    );
+
 
     @Override
-    public void beforeAll(ExtensionContext extensionContext) {
+    public void beforeEach(ExtensionContext context) throws Exception {
         TimeState.open();
-    }
 
-    @Override
-    public void afterAll(ExtensionContext extensionContext) {
-        TimeState.close();
-    }
+        ExtentionHelper.retrieveAnnotationFromTestClasses(TimeAware.class, context)
+                .ifPresent(settings -> apply(settings, context));
 
-    @Override
-    public void beforeEach(ExtensionContext context) {
         ExtentionHelper.retrieveAnnotationFromTestClasses(TimeAware.class, context).ifPresent(settings -> {
             TimeState.setInstantProvider(ExtentionHelper.getFieldsFromInstanceHierarchy(context, InstantProvider.class));
 
@@ -47,28 +53,65 @@ public class TimeAwareExtension implements BeforeEachCallback, AfterEachCallback
     }
 
     @Override
-    public void afterEach(ExtensionContext context) {
+    public void afterEach(ExtensionContext context) throws Exception {
         TimeState.reset();
+        TimeState.close();
+    }
+
+    private void apply(TimeAware settings, ExtensionContext context) {
+        ZoneId zone    = ZoneId.of(settings.zone());
+        Instant instant = resolveInstant(settings.value(), zone);
+        Instant minDate = resolveMin(settings.minDate());
+        Instant maxDate = resolveMax(settings.maxDate());
+
+        TimeState.setZone(zone);
+        TimeState.setInstantTime(instant);
+        TimeState.setMinDate(minDate);
+        TimeState.setMaxDate(maxDate);
+        TimeState.setInstantProvider(
+                ExtentionHelper.getFieldsFromInstanceHierarchy(context, InstantProvider.class));
+    }
+
+    /**
+     * Resolves the instant from the annotation value.
+     * Empty value → current time captured as a fixed snapshot.
+     */
+    private Instant resolveInstant(String value, ZoneId zone) {
+        if (value == null || value.isBlank()) {
+            return Instant.now(java.time.Clock.system(zone));
+        }
+        return parse(value, zone);
+    }
+
+    private Instant resolveMin(String value) {
+        if (value == null || value.isBlank()) {
+            return Instant.MIN;
+        }
+        return Instant.parse(value);
+    }
+
+    private Instant resolveMax(String value) {
+        if (value == null || value.isBlank()) {
+            return Instant.MAX;
+        }
+        return Instant.parse(value);
     }
 
     private Instant parse(String value, ZoneId zone) {
-        List<DateTimeFormatter> formatters = List.of(
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-        );
-        for (DateTimeFormatter formatter : formatters) {
+        for (DateTimeFormatter formatter : FORMATTERS) {
             try {
-                LocalDateTime localDateTime = LocalDateTime.parse(value, formatter);
-                return localDateTime.atZone(zone).toInstant();
+                // Date-only formatter produces LocalDate, others produce LocalDateTime
+                if (formatter.toString().contains("HH")) {
+                    return LocalDateTime.parse(value, formatter).atZone(zone).toInstant();
+                } else {
+                    return LocalDate.parse(value, formatter).atStartOfDay(zone).toInstant();
+                }
             } catch (DateTimeParseException e) {
-                // Ignore. Try next formatter
+                // Try next formatter
             }
         }
-
-        try {
-            return LocalDate.parse(value, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay(zone).toInstant();
-        } catch (DateTimeParseException e) {
-            throw new RuntimeException("Unable to parse @TimeAware value");
-        }
+        throw new RuntimeException(
+                "@TimeAware could not parse value '%s' — accepted formats: yyyy-MM-dd, yyyy-MM-dd HH:mm, yyyy-MM-dd HH:mm:ss"
+                        .formatted(value));
     }
 }

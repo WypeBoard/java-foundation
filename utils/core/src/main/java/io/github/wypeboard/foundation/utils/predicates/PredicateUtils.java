@@ -1,4 +1,4 @@
-package io.github.wypeboard.foundation.date.test.utils.state;
+package io.github.wypeboard.foundation.utils.predicates;
 
 import java.util.function.Function;
 import java.util.function.Predicate;
