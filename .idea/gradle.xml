@@ -13,6 +13,8 @@
             <option value="$PROJECT_DIR$/date/spring" />
             <option value="$PROJECT_DIR$/date/test" />
             <option value="$PROJECT_DIR$/utils/core" />
+            <option value="$PROJECT_DIR$/vcs/core/ado/pullrequest" />
+            <option value="$PROJECT_DIR$/vcs/core/base" />
           </set>
         </option>
       </GradleProjectSettings>
