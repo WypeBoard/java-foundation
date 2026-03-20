@@ -1,0 +1,15 @@
+dependencies {
+    // Testcontainers — the whole point of this module
+    compileOnly 'org.testcontainers:postgresql:1.21.4'
+    compileOnly 'com.zaxxer:HikariCP:7.0.2'
+    // Spring test APIs — compile against them, don't ship them
+    compileOnly 'org.springframework.boot:spring-boot-starter-test:3.5.11'
+    compileOnly 'org.springframework.boot:spring-boot-test:3.5.11'
+    compileOnly 'org.springframework:spring-context:3.5.11'
+
+    api project(':test-utils')
+
+    api 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    api 'org.mockito:mockito-core:5.11.0'
+
+}

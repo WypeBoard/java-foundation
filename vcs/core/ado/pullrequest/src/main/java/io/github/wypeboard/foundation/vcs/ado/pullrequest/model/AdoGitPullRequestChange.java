@@ -1,7 +1,7 @@
 package io.github.wypeboard.foundation.vcs.ado.pullrequest.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.github.wypeboard.adoassistant.infrastructure.vcs.connector.ado.model.types.AdoVersionControlChangeType;
+import io.github.wypeboard.foundation.vcs.ado.pullrequest.model.types.AdoVersionControlChangeType;
 
 /**
  * Change made in a pull request

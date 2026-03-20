@@ -2,7 +2,7 @@ package io.github.wypeboard.foundation.vcs.ado.pullrequest.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.wypeboard.adoassistant.infrastructure.vcs.connector.ado.model.types.AdoIterationReason;
+import io.github.wypeboard.foundation.vcs.ado.pullrequest.model.types.AdoIterationReason;
 
 import java.time.OffsetDateTime;
 import java.util.List;

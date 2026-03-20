@@ -1,7 +1,8 @@
-package io.github.wypeboard.foundation.date.test.extension;
+package io.github.wypeboard.foundation.utils.test.extension;
 
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestInstances;
+import org.junit.platform.commons.support.AnnotationSupport;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -26,7 +27,7 @@ public final class ExtentionHelper {
         Optional<T> annotation;
 
         do {
-            annotation = findAnnotation(currentContext.getElement(), annotationClass);
+            annotation = AnnotationSupport.findAnnotation(currentContext.getElement(), annotationClass);
 
             if (currentContext.getParent().isEmpty()) {
                 break;

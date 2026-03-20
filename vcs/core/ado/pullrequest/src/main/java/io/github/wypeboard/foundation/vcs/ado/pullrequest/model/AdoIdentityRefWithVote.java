@@ -2,7 +2,7 @@ package io.github.wypeboard.foundation.vcs.ado.pullrequest.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.wypeboard.adoassistant.infrastructure.vcs.connector.ado.model.types.AdoReviewVote;
+import io.github.wypeboard.foundation.vcs.ado.pullrequest.model.types.AdoReviewVote;
 
 import java.util.ArrayList;
 import java.util.List;

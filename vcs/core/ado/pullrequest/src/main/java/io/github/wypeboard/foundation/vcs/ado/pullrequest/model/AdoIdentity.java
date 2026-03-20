@@ -1,7 +1,7 @@
 package io.github.wypeboard.foundation.vcs.ado.pullrequest.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.github.wypeboard.adoassistant.infrastructure.vcs.connector.ado.model.api.Identifiable;
+import io.github.wypeboard.foundation.vcs.ado.pullrequest.model.api.Identifiable;
 
 /**
  * General identity type, used by the undocumented {@link AdoConnectionData} structure.

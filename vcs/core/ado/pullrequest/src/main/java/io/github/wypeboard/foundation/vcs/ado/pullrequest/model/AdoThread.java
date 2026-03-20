@@ -3,8 +3,8 @@ package io.github.wypeboard.foundation.vcs.ado.pullrequest.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.github.wypeboard.adoassistant.infrastructure.vcs.connector.ado.model.types.AdoCommentType;
-import io.github.wypeboard.adoassistant.infrastructure.vcs.connector.ado.model.types.AdoThreadStatus;
+import io.github.wypeboard.foundation.vcs.ado.pullrequest.model.types.AdoCommentType;
+import io.github.wypeboard.foundation.vcs.ado.pullrequest.model.types.AdoThreadStatus;
 
 import java.time.OffsetDateTime;
 import java.util.Collection;

@@ -9,10 +9,12 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/database/test" />
             <option value="$PROJECT_DIR$/date/core" />
             <option value="$PROJECT_DIR$/date/spring" />
             <option value="$PROJECT_DIR$/date/test" />
             <option value="$PROJECT_DIR$/utils/core" />
+            <option value="$PROJECT_DIR$/utils/test" />
             <option value="$PROJECT_DIR$/vcs/core/ado/pullrequest" />
             <option value="$PROJECT_DIR$/vcs/core/base" />
           </set>
