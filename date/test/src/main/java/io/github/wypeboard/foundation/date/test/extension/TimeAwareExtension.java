@@ -38,17 +38,8 @@ public class TimeAwareExtension implements BeforeEachCallback, AfterEachCallback
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         TimeState.open();
-
         ExtentionHelper.retrieveAnnotationFromTestClasses(TimeAware.class, context)
                 .ifPresent(settings -> apply(settings, context));
-
-        ExtentionHelper.retrieveAnnotationFromTestClasses(TimeAware.class, context).ifPresent(settings -> {
-            TimeState.setInstantProvider(ExtentionHelper.getFieldsFromInstanceHierarchy(context, InstantProvider.class));
-
-            ZoneId zoneId = ZoneId.of(settings.zone());
-            TimeState.setZone(zoneId);
-            TimeState.setInstantTime(parse(settings.value(), zoneId));
-        });
     }
 
     @Override
