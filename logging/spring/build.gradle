@@ -1,0 +1,14 @@
+dependencies {
+    compileOnly 'org.springframework.boot:spring-boot-starter-aop:3.5.11'
+    compileOnly 'org.slf4j:slf4j-api:2.0.17'
+
+    // For testing the library itself
+    testImplementation 'org.springframework.boot:spring-boot-starter-aop:3.5.11'
+    testImplementation 'ch.qos.logback:logback-classic:1.5.30'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.5.11'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+}
