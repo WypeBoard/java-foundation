@@ -1,0 +1,13 @@
+dependencies {
+    api project(':core-utils')
+
+    compileOnly 'org.slf4j:slf4j-api:2.0.17'
+
+    // Jackson - Serialization
+    compileOnly 'com.fasterxml.jackson.core:jackson-core:2.19.2'
+    compileOnly 'com.fasterxml.jackson.core:jackson-annotations:2.19.2'
+    compileOnly 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
+    compileOnly 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.2'
+
+
+}
