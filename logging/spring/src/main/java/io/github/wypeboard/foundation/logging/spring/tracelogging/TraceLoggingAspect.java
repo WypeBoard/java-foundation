@@ -1,5 +1,7 @@
 package io.github.wypeboard.foundation.logging.spring.tracelogging;
 
+import io.github.wypeboard.foundation.logging.core.TraceLoggerFormatter;
+import io.github.wypeboard.foundation.logging.core.TraceLoggingOptions;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -21,123 +24,58 @@ public class TraceLoggingAspect {
     @Around("@annotation(traceLogging) || @within(traceLogging)")
     public Object trace(ProceedingJoinPoint pjp, TraceLogging traceLogging) throws Throwable {
         Logger logger = LoggerFactory.getLogger(pjp.getTarget().getClass());
+        Level level = traceLogging.level();
 
-        logMethodEntry(logger, pjp, traceLogging);
+        if (!isLevelEnabled(logger, level)) {
+            return pjp.proceed();
+        }
+
+        TraceLoggingOptions options = optionsFrom(traceLogging);
+        String className = pjp.getTarget().getClass().getSimpleName();
+        String methodName = pjp.getSignature().getName();
+
+        log(logger,
+                level,
+                TraceLoggerFormatter.entryMessage(options),
+                TraceLoggerFormatter.entryArgs(className, methodName, pjp.getArgs(), options)
+        );
 
         long start = System.currentTimeMillis();
         try {
             Object result = pjp.proceed();
-            logMethodExit(logger, pjp, traceLogging, result, System.currentTimeMillis() - start);
+            log(logger,
+                    level,
+                    TraceLoggerFormatter.exitMessage(options),
+                    TraceLoggerFormatter.exitArgs(className, methodName, result, System.currentTimeMillis() - start, options)
+            );
             return result;
         } catch (Throwable ex) {
-            logMethodException(logger, pjp, traceLogging, ex, System.currentTimeMillis() - start);
+            logger
+                    .atError()
+                    .log(TraceLoggerFormatter.exceptionMessage(),
+                            TraceLoggerFormatter.exceptionArgs(className, methodName, System.currentTimeMillis() - start, ex));
             throw ex;
         }
     }
 
-    private void logMethodEntry(Logger logger, ProceedingJoinPoint pjp, TraceLogging ann) {
-        if (!isEnabled(logger, ann.level())) return;
-
-        String message = ann.logArgs()
-                ? "Entering {}.{} with args {}"
-                : "Entering {}.{}";
-
-        if (ann.logArgs()) {
-            log(logger, ann.level(), message,
-                    className(pjp),
-                    methodName(pjp),
-                    formatArgs(pjp.getArgs(), ann));
-        } else {
-            log(logger, ann.level(), message, className(pjp), methodName(pjp));
-        }
+    private TraceLoggingOptions optionsFrom(TraceLogging ann) {
+        return TraceLoggingOptions.builder()
+                .level(ann.level())
+                .logArgs(ann.logArgs())
+                .logResult(ann.logResult())
+                .logExecutionTime(ann.logExecutionTime())
+                .maxLength(ann.maxLength())
+                .fieldsToMask(Set.of(ann.fieldsToMask()))
+                .build();
     }
 
-    private void logMethodExit(Logger logger, ProceedingJoinPoint pjp, TraceLogging ann,
-                               Object result, long elapsedMs) {
-        if (!isEnabled(logger, ann.level())) return;
-
-        StringBuilder msg = new StringBuilder("Exiting {}.{}");
-        List<Object> args = new ArrayList<>();
-        args.add(className(pjp));
-        args.add(methodName(pjp));
-
-        if (ann.logExecutionTime()) {
-            msg.append(" [{}ms]");
-            args.add(elapsedMs);
-        }
-        if (ann.logResult()) {
-            msg.append(" with return {}");
-            args.add(formatResult(result, ann));
-        }
-
-        log(logger, ann.level(), msg.toString(), args.toArray());
-    }
-
-    // --- Exception ---
-
-    private void logMethodException(Logger logger, ProceedingJoinPoint pjp, TraceLogging ann,
-                                    Throwable ex, long elapsedMs) {
-        // Exceptions always log at ERROR regardless of configured level
-        logger.error("Exception in {}.{} after {}ms — threw {}: {}",
-                className(pjp),
-                methodName(pjp),
-                elapsedMs,
-                ex.getClass().getSimpleName(),
-                ex.getMessage());
-    }
-
-    // --- Formatting ---
-
-    private String formatArgs(Object[] args, TraceLogging ann) {
-        if (args == null || args.length == 0) return "[]";
-        String formatted = Arrays.stream(args)
-                .map(arg -> formatValue(arg, ann))
-                .collect(Collectors.joining(", ", "[", "]"));
-        return truncate(formatted, ann.maxLength());
-    }
-
-    private String formatResult(Object result, TraceLogging ann) {
-        if (result == null) return "null";
-        return truncate(formatValue(result, ann), ann.maxLength());
-    }
-
-    private String formatValue(Object value, TraceLogging ann) {
-        if (value == null) return "null";
-        String str = value.toString();
-        // Mask fields by looking for key=value or "key":"value" patterns
-        for (String field : ann.fieldsToMask()) {
-            str = str.replaceAll(
-                    "(?i)(" + Pattern.quote(field) + "\\s*[:=]\\s*)[^,}\\]\"]+",
-                    "$1***"
-            );
-        }
-        return str;
-    }
-
-    private String truncate(String value, int maxLength) {
-        if (value == null) return "null";
-        return value.length() > maxLength
-                ? value.substring(0, maxLength) + "...[truncated]"
-                : value;
-    }
-
-    // --- Helpers ---
-
-    private String className(ProceedingJoinPoint pjp) {
-        return pjp.getTarget().getClass().getSimpleName();
-    }
-
-    private String methodName(ProceedingJoinPoint pjp) {
-        return pjp.getSignature().getName();
-    }
-
-    private boolean isEnabled(Logger logger, Level level) {
+    private boolean isLevelEnabled(Logger logger, Level level) {
         return switch (level) {
             case TRACE -> logger.isTraceEnabled();
             case DEBUG -> logger.isDebugEnabled();
-            case WARN  -> logger.isWarnEnabled();
+            case WARN -> logger.isWarnEnabled();
             case ERROR -> logger.isErrorEnabled();
-            default    -> logger.isInfoEnabled();
+            default -> logger.isInfoEnabled();
         };
     }
 
@@ -145,9 +83,9 @@ public class TraceLoggingAspect {
         switch (level) {
             case TRACE -> logger.atTrace().log(message, args);
             case DEBUG -> logger.atDebug().log(message, args);
-            case WARN  -> logger.atWarn().log(message, args);
+            case WARN -> logger.atWarn().log(message, args);
             case ERROR -> logger.atError().log(message, args);
-            default    -> logger.atInfo().log(message, args);
+            default -> logger.atInfo().log(message, args);
         }
     }
 }

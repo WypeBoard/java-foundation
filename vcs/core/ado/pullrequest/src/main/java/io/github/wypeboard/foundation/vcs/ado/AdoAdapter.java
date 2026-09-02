@@ -2,21 +2,33 @@ package io.github.wypeboard.foundation.vcs.ado;
 
 import io.github.wypeboard.foundation.vcs.ado.pullrequest.model.AdoGitPullRequest;
 import io.github.wypeboard.foundation.vcs.ado.pullrequest.model.AdoThread;
+import io.github.wypeboard.foundation.vcs.base.adapter.VcsAdapter;
+import io.github.wypeboard.foundation.vcs.base.connector.BasicAuthStrategy;
 import io.github.wypeboard.foundation.vcs.base.exception.VcsException;
+import io.github.wypeboard.foundation.vcs.base.model.VcsDataContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class AdoAdapter {
+public class AdoAdapter implements VcsAdapter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdoAdapter.class);
     private final AdoConnectorClient adoConnectorClient;
 
-    public AdoAdapter(ConfigManager configManager, PropertiesLoader propertiesLoader) {
-        String repository = propertiesLoader.get(PropertiesConstants.ADO_REPOSITORY);
-        String authToken = propertiesLoader.get(PropertiesConstants.ADO_AUTH_TOKEN);
-        adoConnectorClient = new AdoConnectorClient(repository, authToken, configManager);
+    public AdoAdapter(String repository, String authenticationToken, AzureDevOpsUrlHelper azureDevOpsUrlHelper) {
+        BasicAuthStrategy authStrategy = new BasicAuthStrategy(authenticationToken);
+        adoConnectorClient = new AdoConnectorClient(repository, authStrategy, azureDevOpsUrlHelper);
+    }
+
+    @Override
+    public VcsDataContainer fetchPullRequests() {
+        return null;
+    }
+
+    @Override
+    public VcsDataContainer fetchComments() {
+        return null;
     }
 
     public void fetchGenericPullRequestData(DataAggregator dataAggregator) {

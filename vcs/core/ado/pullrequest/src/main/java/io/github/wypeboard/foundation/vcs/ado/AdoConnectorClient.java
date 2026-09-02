@@ -12,8 +12,8 @@ import io.github.wypeboard.foundation.vcs.ado.pullrequest.model.AdoPropertiesCol
 import io.github.wypeboard.foundation.vcs.ado.pullrequest.model.AdoTeamMember;
 import io.github.wypeboard.foundation.vcs.ado.pullrequest.model.AdoThread;
 import io.github.wypeboard.foundation.vcs.ado.pullrequest.model.requests.Wrapped;
-import io.github.wypeboard.foundation.vcs.base.connector.BasicAuthStrategy;
 import io.github.wypeboard.foundation.vcs.base.connector.HttpVcsConnector;
+import io.github.wypeboard.foundation.vcs.base.connector.api.VcsAuthStrategy;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -63,10 +63,10 @@ public class AdoConnectorClient {
     private final HttpVcsConnector connector;
     private final AzureDevOpsUrlHelper urlHelper;
 
-    public AdoConnectorClient(String repositoryId, String authToken, ConfigManager configManager) {
-        this.connector = new HttpVcsConnector(new BasicAuthStrategy(authToken));
+    public AdoConnectorClient(String repositoryId, VcsAuthStrategy authStrategy, AzureDevOpsUrlHelper urlHelper) {
+        this.connector = new HttpVcsConnector(authStrategy);
         this.repositoryId = repositoryId;
-        this.urlHelper = new AzureDevOpsUrlHelper(configManager.getConfig());
+        this.urlHelper = urlHelper;
     }
 
     public AdoConnectionData getConnectionData() {
